@@ -1,6 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:estoque_app/pages/homePage.dart';
 import 'package:estoque_app/pages/welcomePage.dart';
-import 'package:flutter/material.dart';
 import 'package:estoque_app/routes/login_route.dart';
 import 'package:estoque_app/validations/login_validator.dart';
 
@@ -17,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController passwordController = TextEditingController();
   String? emailError;
   String? passwordError;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                           labelStyle: TextStyle(color: Color(0xFF7B7B7B)),
                           border: InputBorder.none,
                           contentPadding:
-                          EdgeInsets.symmetric(vertical: 8, horizontal: 5),
+                              EdgeInsets.symmetric(vertical: 8, horizontal: 5),
                           errorText: emailError,
                         ),
                         onChanged: (value) {
@@ -91,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                           labelStyle: TextStyle(color: Color(0xFF7B7B7B)),
                           border: InputBorder.none,
                           contentPadding:
-                          EdgeInsets.symmetric(vertical: 8, horizontal: 5),
+                              EdgeInsets.symmetric(vertical: 8, horizontal: 5),
                           suffixIcon: IconButton(
                             onPressed: () {
                               setState(() {
@@ -115,25 +116,30 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     SizedBox(height: 90),
                     ElevatedButton(
-                      onPressed: () async {
-                        if (emailError == null && passwordError == null) {
-                          _login();
-                        }
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              if (emailError == null && passwordError == null) {
+                                _login();
+                              }
+                            },
                       child: Container(
                         width: 140,
                         height: 55,
                         alignment: Alignment.center,
-                        child: Text(
-                          'Entrar',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        ),
+                        child: _isLoading
+                            ? CircularProgressIndicator()
+                            : Text(
+                                'Entrar',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 18),
+                              ),
                       ),
                       style: ButtonStyle(
-                        backgroundColor:
-                        MaterialStateProperty.all<Color>(Color(0xFF1B7744)),
+                        backgroundColor: MaterialStateProperty.all<Color>(
+                            _isLoading ? Colors.grey : Color(0xFF1B7744)),
                         shape:
-                        MaterialStateProperty.all<RoundedRectangleBorder>(
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -149,9 +155,7 @@ class _LoginPageState extends State<LoginPage> {
                     onTap: () {
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                          builder: (context) =>
-                              WelcomePage(
-                              ),
+                          builder: (context) => WelcomePage(),
                         ),
                       );
                     },
@@ -180,20 +184,25 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final email = emailController.text;
     final password = passwordController.text;
 
     final result = await AuthService.login(email, password);
 
-    if (result['success']) {
-      
-      if (result.containsKey('accessToken')) {
+    setState(() {
+      _isLoading = false;
+    });
 
+    if (result['success']) {
+      if (result.containsKey('accessToken')) {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => HomePage(),
         ));
       } else {
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Erro ao fazer login. Resposta inválida da API."),
@@ -202,7 +211,6 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } else {
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['errorMessage']),
