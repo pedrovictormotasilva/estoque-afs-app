@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class MateriaisPage extends StatefulWidget {
-  const MateriaisPage({super.key});
+  final String accessToken;
+
+  const MateriaisPage({Key? key, required this.accessToken}) : super(key: key);
 
   @override
   State<MateriaisPage> createState() => _MateriaisPageState();

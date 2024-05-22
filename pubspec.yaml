@@ -10,6 +10,7 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.6
   http: ^0.13.3
+  jwt_decoder: ^2.0.1
 
 dev_dependencies:
   flutter_test:
