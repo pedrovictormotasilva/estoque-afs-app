@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:estoque_app/pages/homePage.dart';
 import 'package:estoque_app/pages/welcomePage.dart';
-import 'package:estoque_app/routes/login_route.dart';
+import 'package:estoque_app/utils/login_route.dart';
 import 'package:estoque_app/validations/login_validator.dart';
-import 'package:estoque_app/routes/get_users.dart';
+import 'package:estoque_app/utils/getUsers_route.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -202,8 +202,12 @@ class _LoginPageState extends State<LoginPage> {
     if (result['success']) {
       if (result.containsKey('accessToken')) {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) => HomePage(accessToken: result['accessToken']),
+          builder: (context) => HomePage(
+            accessToken: result['accessToken'],
+            userEmail: emailController.text,
+          ),
         ));
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -212,8 +216,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       }
-    }
-    else {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['errorMessage']),

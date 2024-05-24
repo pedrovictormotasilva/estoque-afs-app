@@ -1,3 +1,4 @@
+
 import 'package:estoque_app/pages/homePages/cabosPage.dart';
 import 'package:estoque_app/pages/homePages/componentesPage.dart';
 import 'package:estoque_app/pages/homePages/computadoresPage.dart';
@@ -14,5 +15,6 @@ class RoutesHomePage {
     '/materiais': (context) => MateriaisPage(accessToken: accessToken),
     '/notebooks': (context) => NotebookPage(accessToken: accessToken),
     '/cabos': (context) => CabosPage(accessToken: accessToken),
+
   };
 }

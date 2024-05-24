@@ -4,23 +4,20 @@ class ContainerHomePage extends StatelessWidget {
   final String text;
   final IconData icon;
   final int quantity;
-  final String routeName;
+  final VoidCallback onTap; // Adicionando uma função de retorno de chamada
 
   const ContainerHomePage({
     Key? key,
     required this.text,
     required this.icon,
     required this.quantity,
-    required this.routeName,
+    required this.onTap, // Alterando de routeName para onTap
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        Navigator.pushReplacementNamed(context, routeName);
-      },
-
+    return GestureDetector(
+      onTap: onTap, // Usando a função de retorno de chamada onTap
       child: Container(
         margin: EdgeInsets.all(10),
         padding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),

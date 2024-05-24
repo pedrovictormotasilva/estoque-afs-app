@@ -1,13 +1,20 @@
-import 'package:estoque_app/routes/get_users.dart';
+import 'package:estoque_app/pages/accountPage.dart';
+import 'package:estoque_app/pages/homePages/cabosPage.dart';
+import 'package:estoque_app/pages/homePages/componentesPage.dart';
+import 'package:estoque_app/pages/homePages/computadoresPage.dart';
+import 'package:estoque_app/pages/homePages/materiaisPage.dart';
+import 'package:estoque_app/pages/homePages/notebookPage.dart';
 import 'package:flutter/material.dart';
+import 'package:estoque_app/utils/getUsers_route.dart';
 import 'package:estoque_app/widgets/sidebar_component.dart';
 import 'package:estoque_app/widgets/container_homepage.dart';
-import 'package:estoque_app/routes/homePage.dart';
+
 
 class HomePage extends StatefulWidget {
   final String accessToken;
+  final String userEmail;
 
-  const HomePage({Key? key, required this.accessToken}) : super(key: key);
+  const HomePage({Key? key, required this.accessToken, required this.userEmail}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -25,16 +32,16 @@ class _HomePageState extends State<HomePage> {
 
   void _fetchUserName() async {
     try {
-      final name = await UserService.getUserName(widget.accessToken);
+      final userInfo = await UserService.getUserInfo(widget.accessToken);
       setState(() {
-        if (name != null) {
-          userName = name;
+        if (userInfo != null) {
+          userName = userInfo['nome'];
         } else {
           errorMessage = 'Nome não encontrado na resposta da API';
         }
       });
     } catch (error) {
-      print('Erro ao buscar nome do usuário: $error');
+      print('Erro ao buscar informações do usuário: $error');
       setState(() {
         errorMessage = 'Erro ao carregar nome';
       });
@@ -44,7 +51,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      routes: RoutesHomePage.routes,
+
+
       home: Scaffold(
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(70.0),
@@ -53,9 +61,20 @@ class _HomePageState extends State<HomePage> {
             title: Row(
               children: [
                 SizedBox(width: 16),
-                CircleAvatar(
-                  backgroundColor: Color(0xFFAFAFAF),
-                  child: Icon(Icons.person, color: Colors.black),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => AccountPage(
+                        accessToken: widget.accessToken,
+                        userName: userName ?? errorMessage ?? 'Carregando...',
+                        userEmail: widget.userEmail,
+                      ),
+                    ));
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: Color(0xFFAFAFAF),
+                    child: Icon(Icons.person, color: Colors.black),
+                  ),
                 ),
                 SizedBox(width: 8),
                 Column(
@@ -65,8 +84,7 @@ class _HomePageState extends State<HomePage> {
                       padding: EdgeInsets.only(top: 4),
                       child: Text(
                         'Bem-vindo,',
-                        style:
-                            TextStyle(fontSize: 14, color: Color(0xFFCECECE)),
+                        style: TextStyle(fontSize: 14, color: Color(0xFFCECECE)),
                       ),
                     ),
                     Padding(
@@ -87,7 +105,7 @@ class _HomePageState extends State<HomePage> {
             iconTheme: IconThemeData(color: Colors.white),
           ),
         ),
-        endDrawer: const SideBar(),
+        endDrawer: SideBar(accessToken: widget.accessToken),
         body: Container(
           color: Color(0xFFE9E9E9),
           child: Column(
@@ -109,36 +127,72 @@ class _HomePageState extends State<HomePage> {
                       text: 'Computadores',
                       icon: Icons.desktop_mac_outlined,
                       quantity: 10,
-                      routeName: '/computadores',
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => ComputadoresPage(
+                            accessToken: widget.accessToken,
+                          ),
+                        ));
+                      },
                     ),
-                    SizedBox(height: 10),
-                    ContainerHomePage(
+
+
+                    SizedBox(height: 10),ContainerHomePage(
                       text: 'Componentes',
                       icon: Icons.developer_board,
                       quantity: 5,
-                      routeName: '/componentes',
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => ComponentesPage(
+                            accessToken: widget.accessToken,
+                          ),
+                        ));
+                      },
+
                     ),
                     SizedBox(height: 10),
                     ContainerHomePage(
                       text: 'Materiais',
                       icon: Icons.build,
                       quantity: 15,
-                      routeName: '/materiais',
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => MateriaisPage(
+                            accessToken: widget.accessToken,
+                          ),
+                        ));
+                      },
+
                     ),
                     SizedBox(height: 10),
                     ContainerHomePage(
                       text: 'Notebooks',
                       icon: Icons.laptop,
                       quantity: 8,
-                      routeName: '/notebooks',
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => NotebookPage(
+                            accessToken: widget.accessToken,
+                          ),
+                        ));
+                      },
+
                     ),
                     SizedBox(height: 10),
                     ContainerHomePage(
                       text: 'Cabos',
                       icon: Icons.usb,
                       quantity: 20,
-                      routeName: '/cabos',
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => CabosPage(
+                            accessToken: widget.accessToken,
+                          ),
+                        ));
+                      },
+
                     ),
+
                   ],
                 ),
               ),

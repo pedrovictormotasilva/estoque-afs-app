@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 class UserService {
-  static Future<String?> getUserName(String accessToken) async {
+  static Future<Map<String, dynamic>?> getUserInfo(String accessToken) async {
     final url = Uri.parse('https://api-estoque-adolfo.vercel.app/users');
     final response = await http.get(
       url,
@@ -23,11 +23,14 @@ class UserService {
         var user = responseData.firstWhere((user) => user['id'] == userId,
             orElse: () => null);
 
-        if (user != null && user['nome'] is String) {
-          print('Nome do usuário encontrado: ${user['nome']}');
-          return user['nome'];
+        if (user != null && user['nome'] is String && user['email'] is String) {
+          print('Usuário encontrado: ${user['nome']} - ${user['email']}');
+          return {
+            'nome': user['nome'],
+            'email': user['email'],
+          };
         } else {
-          print('Nome não encontrado ou não é uma string.');
+          print('Nome ou email não encontrados ou não são strings.');
           return null;
         }
       } catch (e) {

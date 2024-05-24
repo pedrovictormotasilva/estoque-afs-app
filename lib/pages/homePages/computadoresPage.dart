@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:estoque_app/utils/crud_route.dart';
+import 'package:estoque_app/widgets/addProductModal.dart';
 import 'package:estoque_app/widgets/crud_container.dart';
 import 'package:estoque_app/widgets/sidebar_component.dart';
 
@@ -14,6 +18,28 @@ class ComputadoresPage extends StatefulWidget {
 
 class _ComputadoresPageState extends State<ComputadoresPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late Future<Map<String, dynamic>> _products;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+    print('Token na página ComputadoresPage: "${widget.accessToken}"');
+  }
+
+  Future<void> _loadProducts() async {
+    try {
+      _products = ProductApiService.getProducts(widget.accessToken);
+      await _products;
+    } catch (error) {
+      print('Falha ao carregar produtos: $error');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +81,7 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
           ],
         ),
       ),
-      endDrawer: SideBar(),
+      endDrawer: SideBar(accessToken: widget.accessToken,),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -96,7 +122,7 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
                                 color: Color(0xFF828A89),
                               ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -109,7 +135,25 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
                   ),
                   SizedBox(width: 10),
                   TextButton.icon(
-                    onPressed: () {},
+                    onPressed: () async {
+                      final result = await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AddProductModal(
+                              accessToken: widget.accessToken);
+                        },
+                      );
+
+                      if (result == true) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ComputadoresPage(
+                                accessToken: widget.accessToken),
+                          ),
+                        );
+                      }
+                    },
                     style: TextButton.styleFrom(
                       backgroundColor: Color(0xFF086632),
                       padding: EdgeInsets.symmetric(horizontal: 16),
@@ -126,38 +170,59 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
                 ],
               ),
               SizedBox(height: 20),
-              Column(
-                children: [
-                  CrudContainer(
-                    title: 'computador tal',
-                    code: '123456',
-                    stock: 10,
-                  ),
-                  SizedBox(height: 20),
-                  CrudContainer(
-                    title: 'computador tal',
-                    code: '123456',
-                    stock: 10,
-                  ),
-                  SizedBox(height: 20),
-                  CrudContainer(
-                    title: 'computador tal',
-                    code: '123456',
-                    stock: 10,
-                  ),
-                  SizedBox(height: 20),
-                  CrudContainer(
-                    title: 'computador tal',
-                    code: '123456',
-                    stock: 10,
-                  ),
-                  SizedBox(height: 20),
-                ],
-              ),
+              _isLoading ? CircularProgressIndicator() : _buildProductList(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildProductList() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _products,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Erro: ${snapshot.error}');
+        } else {
+          final products = snapshot.data?['Company'] ?? [];
+
+          if (products.isEmpty) {
+            return Center(
+              child: Text('Nenhum produto encontrado.'),
+            );
+          }
+
+          return Column(
+            children: products.map<Widget>((product) {
+              final productName = product['nome'] ?? '';
+              final productCode = (product['id_item'] != null)
+                  ? product['id_item'].toString()
+                  : '0';
+              final productStock =
+                  (product['estoque'] != null) ? product['estoque'] : 0;
+              final productId =
+                  (product['id_item'] != null) ? product['id_item'] : 0;
+
+              return CrudContainer(
+                title: productName,
+                code: productCode,
+                stock: productStock,
+                accessToken: widget.accessToken,
+                productId: productId,
+                onDelete: () {
+                  setState(() {
+                    _products =
+                        ProductApiService.getProducts(widget.accessToken);
+                  });
+                },
+              );
+            }).toList(),
+          );
+        }
+      },
     );
   }
 }

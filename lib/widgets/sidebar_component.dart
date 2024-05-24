@@ -1,7 +1,15 @@
+import 'package:estoque_app/pages/homePages/cabosPage.dart';
+import 'package:estoque_app/pages/homePages/componentesPage.dart';
+import 'package:estoque_app/pages/homePages/computadoresPage.dart';
+import 'package:estoque_app/pages/homePages/materiaisPage.dart';
+import 'package:estoque_app/pages/homePages/notebookPage.dart';
 import 'package:flutter/material.dart';
 
 class SideBar extends StatefulWidget {
-  const SideBar({super.key});
+  final String accessToken;
+  const SideBar({super.key, required this.accessToken});
+
+
 
   @override
   State<SideBar> createState() => _SideBarState();
@@ -42,7 +50,11 @@ class _SideBarState extends State<SideBar> {
                 setState(() {
                   _selectedIndex = 0;
                 });
-                Navigator.pushNamed(context, '/computadores');
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => ComputadoresPage(
+                    accessToken: widget.accessToken,
+                  ),
+                ));
               },
             ),
             _createDrawerItem(
@@ -53,7 +65,11 @@ class _SideBarState extends State<SideBar> {
                 setState(() {
                   _selectedIndex = 1;
                 });
-                Navigator.pushNamed(context, '/componentes');
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => ComponentesPage(
+                    accessToken: widget.accessToken,
+                  ),
+                ));
               },
             ),
             _createDrawerItem(
@@ -64,7 +80,11 @@ class _SideBarState extends State<SideBar> {
                 setState(() {
                   _selectedIndex = 2;
                 });
-                Navigator.pushNamed(context, '/materiais');
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => MateriaisPage(
+                    accessToken: widget.accessToken,
+                  ),
+                ));
               },
             ),
             _createDrawerItem(
@@ -75,7 +95,11 @@ class _SideBarState extends State<SideBar> {
                 setState(() {
                   _selectedIndex = 3;
                 });
-                Navigator.pushNamed(context, '/notebooks');
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => NotebookPage(
+                    accessToken: widget.accessToken,
+                  ),
+                ));
               },
             ),
             _createDrawerItem(
@@ -86,7 +110,11 @@ class _SideBarState extends State<SideBar> {
                 setState(() {
                   _selectedIndex = 4;
                 });
-                Navigator.pushNamed(context, '/cabos');
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => CabosPage(
+                    accessToken: widget.accessToken,
+                  ),
+                ));
               },
             ),
           ],
