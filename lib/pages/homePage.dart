@@ -1,20 +1,21 @@
+import 'package:flutter/material.dart';
 import 'package:estoque_app/pages/accountPage.dart';
 import 'package:estoque_app/pages/homePages/cabosPage.dart';
 import 'package:estoque_app/pages/homePages/componentesPage.dart';
 import 'package:estoque_app/pages/homePages/computadoresPage.dart';
 import 'package:estoque_app/pages/homePages/materiaisPage.dart';
 import 'package:estoque_app/pages/homePages/notebookPage.dart';
-import 'package:flutter/material.dart';
-import 'package:estoque_app/utils/getUsers_route.dart';
-import 'package:estoque_app/widgets/sidebar_component.dart';
+import 'package:estoque_app/utils/getProducts_util.dart';
+import 'package:estoque_app/utils/getUsers_util.dart';
 import 'package:estoque_app/widgets/container_homepage.dart';
-
+import 'package:estoque_app/widgets/sidebar_component.dart';
 
 class HomePage extends StatefulWidget {
   final String accessToken;
   final String userEmail;
 
-  const HomePage({Key? key, required this.accessToken, required this.userEmail}) : super(key: key);
+  const HomePage({Key? key, required this.accessToken, required this.userEmail})
+      : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -22,12 +23,15 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String? userName;
+  int? userId;
   String? errorMessage;
+  Map<int, int> productCounts = {};
 
   @override
   void initState() {
     super.initState();
     _fetchUserName();
+    _fetchProductCounts();
   }
 
   void _fetchUserName() async {
@@ -36,6 +40,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         if (userInfo != null) {
           userName = userInfo['nome'];
+          userId = userInfo['id'];
         } else {
           errorMessage = 'Nome não encontrado na resposta da API';
         }
@@ -48,11 +53,33 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _fetchProductCounts() async {
+    try {
+      final counts = await ProductService.getProductCounts(widget.accessToken);
+      setState(() {
+        productCounts = counts;
+      });
+    } catch (error) {
+      print('Erro ao buscar contagem de produtos: $error');
+    }
+  }
+
+  int getCategoryCount(int categoryId) {
+    return productCounts[categoryId] ?? 0;
+  }
+
+  Future<void> _navigateToPage(Widget page) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => page),
+    );
+    if (result == true) {
+      _fetchProductCounts();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-
-
       home: Scaffold(
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(70.0),
@@ -63,13 +90,19 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(width: 16),
                 GestureDetector(
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => AccountPage(
-                        accessToken: widget.accessToken,
-                        userName: userName ?? errorMessage ?? 'Carregando...',
-                        userEmail: widget.userEmail,
-                      ),
-                    ));
+                    if (userId != null) {
+                      print('Navigating to AccountPage'); // Adicionado para depuração
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => AccountPage(
+                          accessToken: widget.accessToken,
+                          userName: userName ?? errorMessage ?? 'Carregando...',
+                          userEmail: widget.userEmail,
+                          userId: userId!,
+                        ),
+                      ));
+                    } else {
+                      print('userId is null');
+                    }
                   },
                   child: CircleAvatar(
                     backgroundColor: Color(0xFFAFAFAF),
@@ -105,7 +138,7 @@ class _HomePageState extends State<HomePage> {
             iconTheme: IconThemeData(color: Colors.white),
           ),
         ),
-        endDrawer: SideBar(accessToken: widget.accessToken),
+        endDrawer: SideBar(accessToken: widget.accessToken, userEmail: widget.userEmail,),
         body: Container(
           color: Color(0xFFE9E9E9),
           child: Column(
@@ -126,73 +159,47 @@ class _HomePageState extends State<HomePage> {
                     ContainerHomePage(
                       text: 'Computadores',
                       icon: Icons.desktop_mac_outlined,
-                      quantity: 10,
+                      quantity: getCategoryCount(1),
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => ComputadoresPage(
-                            accessToken: widget.accessToken,
-                          ),
-                        ));
+                        _navigateToPage(ComputadoresPage(accessToken: widget.accessToken, userEmail: widget.userEmail,));
                       },
                     ),
-
-
-                    SizedBox(height: 10),ContainerHomePage(
+                    SizedBox(height: 10),
+                    ContainerHomePage(
                       text: 'Componentes',
                       icon: Icons.developer_board,
-                      quantity: 5,
+                      quantity: getCategoryCount(2),
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => ComponentesPage(
-                            accessToken: widget.accessToken,
-                          ),
-                        ));
+                        _navigateToPage(ComponentesPage(accessToken: widget.accessToken, userEmail: widget.userEmail,));
                       },
-
                     ),
                     SizedBox(height: 10),
                     ContainerHomePage(
                       text: 'Materiais',
                       icon: Icons.build,
-                      quantity: 15,
+                      quantity: getCategoryCount(3),
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => MateriaisPage(
-                            accessToken: widget.accessToken,
-                          ),
-                        ));
+                        _navigateToPage(MateriaisPage(accessToken: widget.accessToken, userEmail: widget.userEmail,));
                       },
-
                     ),
                     SizedBox(height: 10),
                     ContainerHomePage(
                       text: 'Notebooks',
                       icon: Icons.laptop,
-                      quantity: 8,
+                      quantity: getCategoryCount(4),
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => NotebookPage(
-                            accessToken: widget.accessToken,
-                          ),
-                        ));
+                        _navigateToPage(NotebookPage(accessToken: widget.accessToken, userEmail: widget.userEmail,));
                       },
-
                     ),
                     SizedBox(height: 10),
                     ContainerHomePage(
                       text: 'Cabos',
                       icon: Icons.usb,
-                      quantity: 20,
+                      quantity: getCategoryCount(5),
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => CabosPage(
-                            accessToken: widget.accessToken,
-                          ),
-                        ));
+                        _navigateToPage(CabosPage(accessToken: widget.accessToken, userEmail: widget.userEmail,));
                       },
-
                     ),
-
                   ],
                 ),
               ),

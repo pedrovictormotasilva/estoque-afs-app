@@ -1,11 +1,12 @@
-import 'package:estoque_app/utils/crud_route.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AddProductModal extends StatefulWidget {
   final String accessToken;
+  final int categoryId;
 
-  const AddProductModal({Key? key, required this.accessToken})
-      : super(key: key);
+  const AddProductModal({Key? key, required this.accessToken, required this.categoryId}) : super(key: key);
 
   @override
   _AddProductModalState createState() => _AddProductModalState();
@@ -13,33 +14,33 @@ class AddProductModal extends StatefulWidget {
 
 class _AddProductModalState extends State<AddProductModal> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _stockController = TextEditingController();
-  final TextEditingController _categoryIdController = TextEditingController();
-  bool _isLoading = false;
+  String _productName = '';
+  String _productDescription = '';
+  int _productStock = 0;
 
   Future<void> _createProduct() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-      });
-      try {
-        final newProduct = {
-          'nome': _nameController.text,
-          'estoque': int.tryParse(_stockController.text) ?? 0,
-          'categoryId': int.tryParse(_categoryIdController.text) ?? 0,
-        };
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      final url = Uri.parse('https://api-estoque-adolfo.vercel.app/Product');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.accessToken}',
+        },
+        body: json.encode({
+          'nome': _productName,
+          'descricao': _productDescription,
+          'estoque': _productStock,
+          'categoria_id': widget.categoryId,
+        }),
+      );
 
-        await ProductApiService.createProduct(widget.accessToken, newProduct);
-        Navigator.of(context).pop(true); // Retornar true para indicar sucesso
-      } catch (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Falha ao criar produto: $error')),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
+      if (response.statusCode == 201) {
+        Navigator.of(context).pop(true);
+      } else {
+        final responseData = json.decode(response.body);
+        print('Erro ao criar produto: ${responseData['message']}');
       }
     }
   }
@@ -48,60 +49,55 @@ class _AddProductModalState extends State<AddProductModal> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Adicionar Produto'),
-      content: _isLoading
-          ? CircularProgressIndicator()
-          : Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(labelText: 'Nome'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, insira um nome';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _stockController,
-                    decoration: InputDecoration(labelText: 'Estoque'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, insira o estoque';
-                      } else if (int.tryParse(value) == null) {
-                        return 'Estoque deve ser um número';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _categoryIdController,
-                    decoration: InputDecoration(labelText: 'ID da Categoria'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, insira o ID da categoria';
-                      } else if (int.tryParse(value) == null) {
-                        return 'ID da Categoria deve ser um número';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-              ),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Nome do Produto'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor, insira o nome do produto';
+                }
+                return null;
+              },
+              onSaved: (value) {
+                _productName = value!;
+              },
             ),
-      actions: [
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Descrição'),
+              onSaved: (value) {
+                _productDescription = value!;
+              },
+            ),
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Estoque'),
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value == null || int.tryParse(value) == null) {
+                  return 'Por favor, insira uma quantidade válida';
+                }
+                return null;
+              },
+              onSaved: (value) {
+                _productStock = int.parse(value!);
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
           child: Text('Cancelar'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
         ),
         ElevatedButton(
+          child: Text('Adicionar'),
           onPressed: _createProduct,
-          child: Text('Criar'),
         ),
       ],
     );

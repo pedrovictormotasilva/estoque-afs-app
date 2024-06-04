@@ -1,17 +1,20 @@
-import 'package:estoque_app/pages/homePage.dart';
-
 import 'package:flutter/material.dart';
+import 'package:estoque_app/utils/updatePassword_util.dart';
+import 'homePage.dart';
 
 class AccountPage extends StatefulWidget {
-  const AccountPage(
-      {Key? key,
-      required this.accessToken,
-      required this.userName,
-      required this.userEmail})
-      : super(key: key);
+  const AccountPage({
+    Key? key,
+    required this.accessToken,
+    required this.userName,
+    required this.userEmail,
+    required this.userId,
+  }) : super(key: key);
+
   final String accessToken;
   final String userName;
   final String userEmail;
+  final int userId;
 
   @override
   _AccountPageState createState() => _AccountPageState();
@@ -23,6 +26,35 @@ class _AccountPageState extends State<AccountPage> {
   TextEditingController newPasswordController = TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  void _changePassword() async {
+    final currentPassword = currentPasswordController.text;
+    final newPassword = newPasswordController.text;
+
+    try {
+      final success = await UserService.updatePassword(
+        widget.userId,
+        currentPassword,
+        newPassword,
+        widget.accessToken,
+        widget.userName,
+        widget.userEmail,
+      );
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Senha alterada com sucesso')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha ao alterar a senha')),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,15 +62,14 @@ class _AccountPageState extends State<AccountPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () =>
-              Navigator.of(context).pushReplacement(MaterialPageRoute(
-            builder: (context) => HomePage(
-              accessToken: widget.accessToken,
-              userEmail: widget.userEmail,
-              
-
+          onPressed: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => HomePage(
+                accessToken: widget.accessToken,
+                userEmail: widget.userEmail,
+              ),
             ),
-          )),
+          ),
         ),
         title: Text(
           'Perfil',
@@ -51,9 +82,7 @@ class _AccountPageState extends State<AccountPage> {
               _scaffoldKey.currentState!.openDrawer();
             },
           ),
-
         ],
-
         backgroundColor: Color(0xFF086632),
       ),
       body: Padding(
@@ -92,8 +121,7 @@ class _AccountPageState extends State<AccountPage> {
                         color: Color(0xFF086632),
                         shape: BoxShape.circle,
                       ),
-                      child:
-                          Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                      child: Icon(Icons.camera_alt, color: Colors.white, size: 20),
                     ),
                   ),
                 ),
@@ -104,9 +132,10 @@ class _AccountPageState extends State<AccountPage> {
               child: Text(
                 widget.userName,
                 style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2B4537)),
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2B4537),
+                ),
               ),
             ),
             Center(
@@ -116,16 +145,11 @@ class _AccountPageState extends State<AccountPage> {
               ),
             ),
             SizedBox(height: 20),
-            buildPasswordField('Senha Atual', currentPasswordController,
-                Color(0xFF232323), Color(0xFF8C8C8C)),
+            buildPasswordField('Senha Atual', currentPasswordController, Color(0xFF232323), Color(0xFF8C8C8C)),
             SizedBox(height: 20),
-            buildPasswordField('Nova Senha', newPasswordController,
-                Color(0xFF232323), Color(0xFF8C8C8C)),
+            buildPasswordField('Nova Senha', newPasswordController, Color(0xFF232323), Color(0xFF8C8C8C)),
             SizedBox(height: 10),
-            buildButton('Mudar Senha', Color(0xFF086632), Colors.white, () {
-              // Lógica para mudar a senha
-              print('Mudar senha');
-            }),
+            buildButton('Mudar Senha', Color(0xFF086632), Colors.white, _changePassword),
             Spacer(),
             buildButton('Sair', Colors.transparent, Color(0xFFFF6F6F), () {
               // Lógica para sair
@@ -137,8 +161,7 @@ class _AccountPageState extends State<AccountPage> {
     );
   }
 
-  Widget buildPasswordField(String title, TextEditingController controller,
-      Color titleColor, Color hintColor) {
+  Widget buildPasswordField(String title, TextEditingController controller, Color titleColor, Color hintColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -169,9 +192,7 @@ class _AccountPageState extends State<AccountPage> {
     );
   }
 
-  Widget buildButton(String title, Color backgroundColor, Color textColor,
-      VoidCallback onPressed,
-      {Widget? leadingIcon}) {
+  Widget buildButton(String title, Color backgroundColor, Color textColor, VoidCallback onPressed, {Widget? leadingIcon}) {
     return ElevatedButton.icon(
       onPressed: onPressed,
       icon: leadingIcon ?? Container(),

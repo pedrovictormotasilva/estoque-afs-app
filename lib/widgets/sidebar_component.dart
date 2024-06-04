@@ -7,9 +7,8 @@ import 'package:flutter/material.dart';
 
 class SideBar extends StatefulWidget {
   final String accessToken;
-  const SideBar({super.key, required this.accessToken});
-
-
+  final String userEmail;
+  const SideBar({super.key, required this.accessToken, required this.userEmail});
 
   @override
   State<SideBar> createState() => _SideBarState();
@@ -53,6 +52,7 @@ class _SideBarState extends State<SideBar> {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => ComputadoresPage(
                     accessToken: widget.accessToken,
+                    userEmail: widget.userEmail,
                   ),
                 ));
               },
@@ -68,6 +68,7 @@ class _SideBarState extends State<SideBar> {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => ComponentesPage(
                     accessToken: widget.accessToken,
+                    userEmail: widget.userEmail,
                   ),
                 ));
               },
@@ -83,6 +84,7 @@ class _SideBarState extends State<SideBar> {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => MateriaisPage(
                     accessToken: widget.accessToken,
+                    userEmail: widget.userEmail,
                   ),
                 ));
               },
@@ -98,6 +100,7 @@ class _SideBarState extends State<SideBar> {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => NotebookPage(
                     accessToken: widget.accessToken,
+                    userEmail: widget.userEmail,
                   ),
                 ));
               },
@@ -113,6 +116,7 @@ class _SideBarState extends State<SideBar> {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => CabosPage(
                     accessToken: widget.accessToken,
+                    userEmail: widget.userEmail,
                   ),
                 ));
               },

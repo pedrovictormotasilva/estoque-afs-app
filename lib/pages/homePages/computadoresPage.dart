@@ -1,15 +1,16 @@
 import 'dart:convert';
+import 'package:estoque_app/pages/homePage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:estoque_app/utils/crud_route.dart';
+import 'package:estoque_app/utils/crud_util.dart';
 import 'package:estoque_app/widgets/addProductModal.dart';
 import 'package:estoque_app/widgets/crud_container.dart';
 import 'package:estoque_app/widgets/sidebar_component.dart';
 
 class ComputadoresPage extends StatefulWidget {
   final String accessToken;
-
-  const ComputadoresPage({Key? key, required this.accessToken})
+  final String userEmail;
+  const ComputadoresPage({Key? key, required this.accessToken, required this.userEmail})
       : super(key: key);
 
   @override
@@ -30,7 +31,7 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
 
   Future<void> _loadProducts() async {
     try {
-      _products = ProductApiService.getProducts(widget.accessToken);
+      _products = ProductApiService.getProducts(widget.accessToken, 1);
       await _products;
     } catch (error) {
       print('Falha ao carregar produtos: $error');
@@ -55,7 +56,12 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
               color: Colors.white,
             ),
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(context).pushReplacement(MaterialPageRoute(
+                builder: (context) => HomePage(
+                  accessToken: widget.accessToken,
+                  userEmail: widget.userEmail,
+                ),
+              ));
             },
           ),
           titleSpacing: 0,
@@ -81,7 +87,10 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
           ],
         ),
       ),
-      endDrawer: SideBar(accessToken: widget.accessToken,),
+      endDrawer: SideBar(
+        accessToken: widget.accessToken,
+        userEmail: widget.userEmail,
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -140,7 +149,9 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
                         context: context,
                         builder: (BuildContext context) {
                           return AddProductModal(
-                              accessToken: widget.accessToken);
+                              accessToken: widget.accessToken,
+                          categoryId: 1,);
+
                         },
                       );
 
@@ -149,7 +160,8 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => ComputadoresPage(
-                                accessToken: widget.accessToken),
+                                accessToken: widget.accessToken,
+                            userEmail: widget.userEmail,),
                           ),
                         );
                       }
@@ -215,7 +227,7 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
                 onDelete: () {
                   setState(() {
                     _products =
-                        ProductApiService.getProducts(widget.accessToken);
+                        ProductApiService.getProducts(widget.accessToken, 1);
                   });
                 },
               );

@@ -4,15 +4,17 @@ import 'package:http/http.dart' as http;
 class ProductApiService {
   static const baseUrl = 'https://api-estoque-adolfo.vercel.app/Product';
 
-  static Future<Map<String, dynamic>> getProducts(String accessToken) async {
+  static Future<Map<String, dynamic>> getProducts(String accessToken, int categoryId) async {
     final response = await http.get(
       Uri.parse('$baseUrl'),
       headers: {'Authorization': 'Bearer $accessToken'},
     );
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      final data = json.decode(response.body);
+      final products = data['Company']?.where((product) => product['categoryId'] == categoryId).toList() ?? [];
+      return {'Company': products};
     } else {
-      throw Exception('Falha ao carregar os produtos');
+      throw Exception('Falha ao carregar produtos');
     }
   }
 
@@ -55,11 +57,14 @@ class ProductApiService {
   }
 
   static Future<void> createProduct(
-      String accessToken, Map<String, dynamic> newProduct) async {
+      String accessToken, int categoryId, Map<String, dynamic> newProduct) async {
+    // Adicione a categoria ao mapa do novo produto
+    newProduct['categoryId'] = categoryId;
+
     final response = await http.post(
       Uri.parse('$baseUrl/create'),
       headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
+
         'Authorization': 'Bearer $accessToken',
       },
       body: jsonEncode(newProduct),
@@ -68,4 +73,6 @@ class ProductApiService {
       throw Exception('Falha ao criar o produto');
     }
   }
+
+
 }

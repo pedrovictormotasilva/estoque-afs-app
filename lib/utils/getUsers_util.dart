@@ -24,10 +24,11 @@ class UserService {
             orElse: () => null);
 
         if (user != null && user['nome'] is String && user['email'] is String) {
-          print('Usuário encontrado: ${user['nome']} - ${user['email']}');
+          print('Usuário encontrado: ${user['nome']} - ${user['email']} - ${user['id']}]');
           return {
             'nome': user['nome'],
             'email': user['email'],
+            'id': user['id'],
           };
         } else {
           print('Nome ou email não encontrados ou não são strings.');

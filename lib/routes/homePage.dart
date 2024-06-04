@@ -10,11 +10,11 @@ class RoutesHomePage {
   static final String accessToken = '';
 
   static final Map<String, WidgetBuilder> routes = {
-    '/computadores': (context) => ComputadoresPage(accessToken: accessToken),
+/*'/computadores': (context) => ComputadoresPage(accessToken: accessToken),
     '/componentes': (context) => ComponentesPage(accessToken: accessToken),
     '/materiais': (context) => MateriaisPage(accessToken: accessToken),
     '/notebooks': (context) => NotebookPage(accessToken: accessToken),
     '/cabos': (context) => CabosPage(accessToken: accessToken),
-
+*/
   };
 }
