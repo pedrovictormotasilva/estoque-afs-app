@@ -15,13 +15,12 @@ class AddProductModal extends StatefulWidget {
 class _AddProductModalState extends State<AddProductModal> {
   final _formKey = GlobalKey<FormState>();
   String _productName = '';
-  String _productDescription = '';
   int _productStock = 0;
 
   Future<void> _createProduct() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final url = Uri.parse('https://api-estoque-adolfo.vercel.app/Product');
+      final url = Uri.parse('https://api-estoque-adolfo.vercel.app/Product/create');
       final response = await http.post(
         url,
         headers: {
@@ -30,9 +29,8 @@ class _AddProductModalState extends State<AddProductModal> {
         },
         body: json.encode({
           'nome': _productName,
-          'descricao': _productDescription,
           'estoque': _productStock,
-          'categoria_id': widget.categoryId,
+          'categoryId': widget.categoryId,
         }),
       );
 
@@ -64,12 +62,6 @@ class _AddProductModalState extends State<AddProductModal> {
               },
               onSaved: (value) {
                 _productName = value!;
-              },
-            ),
-            TextFormField(
-              decoration: InputDecoration(labelText: 'Descrição'),
-              onSaved: (value) {
-                _productDescription = value!;
               },
             ),
             TextFormField(

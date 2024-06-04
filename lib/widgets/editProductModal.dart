@@ -1,21 +1,20 @@
-import 'package:estoque_app/utils/crud_util.dart';
 import 'package:flutter/material.dart';
-
+import 'package:estoque_app/utils/crud_util.dart';
 
 class EditProductModal extends StatefulWidget {
   final String accessToken;
   final int productId;
-  final String initialTitle;
-  final String initialCode;
-  final int initialStock;
+  final String productName;
+  final String productCode;
+  final int productStock;
 
   const EditProductModal({
     Key? key,
     required this.accessToken,
     required this.productId,
-    required this.initialTitle,
-    required this.initialCode,
-    required this.initialStock,
+    required this.productName,
+    required this.productCode,
+    required this.productStock,
   }) : super(key: key);
 
   @override
@@ -23,31 +22,41 @@ class EditProductModal extends StatefulWidget {
 }
 
 class _EditProductModalState extends State<EditProductModal> {
-  late TextEditingController _titleController;
+  late TextEditingController _nameController;
   late TextEditingController _codeController;
   late TextEditingController _stockController;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.initialTitle);
-    _codeController = TextEditingController(text: widget.initialCode);
-    _stockController = TextEditingController(text: widget.initialStock.toString());
+    _nameController = TextEditingController(text: widget.productName);
+    _codeController = TextEditingController(text: widget.productCode);
+    _stockController = TextEditingController(text: widget.productStock.toString());
   }
 
   Future<void> _updateProduct() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final updatedProduct = {
-        'nome': _titleController.text,
+        'nome': _nameController.text,
         'codigo': _codeController.text,
         'estoque': int.parse(_stockController.text),
       };
 
       await ProductApiService.updateProduct(widget.accessToken, widget.productId, updatedProduct);
-      Navigator.of(context).pop(); // Close the modal after updating
+      Navigator.of(context).pop(true);
     } catch (error) {
-      print('Erro ao atualizar o produto: $error');
-      // Handle the error, e.g., show a snackbar with the error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha ao atualizar produto: $error')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -55,11 +64,13 @@ class _EditProductModalState extends State<EditProductModal> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Editar Produto'),
-      content: SingleChildScrollView(
+      content: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         child: Column(
-          children: <Widget>[
+          children: [
             TextField(
-              controller: _titleController,
+              controller: _nameController,
               decoration: InputDecoration(labelText: 'Nome'),
             ),
             TextField(
@@ -74,16 +85,14 @@ class _EditProductModalState extends State<EditProductModal> {
           ],
         ),
       ),
-      actions: <Widget>[
+      actions: [
         TextButton(
+          onPressed: () => Navigator.of(context).pop(),
           child: Text('Cancelar'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
         ),
         TextButton(
-          child: Text('Salvar'),
           onPressed: _updateProduct,
+          child: Text('Salvar'),
         ),
       ],
     );

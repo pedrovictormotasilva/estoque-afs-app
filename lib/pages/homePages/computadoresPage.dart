@@ -10,7 +10,9 @@ import 'package:estoque_app/widgets/sidebar_component.dart';
 class ComputadoresPage extends StatefulWidget {
   final String accessToken;
   final String userEmail;
-  const ComputadoresPage({Key? key, required this.accessToken, required this.userEmail})
+
+  const ComputadoresPage(
+      {Key? key, required this.accessToken, required this.userEmail})
       : super(key: key);
 
   @override
@@ -21,6 +23,8 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late Future<Map<String, dynamic>> _products;
   bool _isLoading = true;
+  String _searchQuery = '';
+  List<dynamic> _filteredProducts = [];
 
   @override
   void initState() {
@@ -31,14 +35,34 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
 
   Future<void> _loadProducts() async {
     try {
-      _products = ProductApiService.getProducts(widget.accessToken, 1);
-      await _products;
+      final products =
+          await ProductApiService.getProducts(widget.accessToken, 1);
+      setState(() {
+        _products = Future.value(products);
+        _filteredProducts = products['Company'];
+      });
     } catch (error) {
       print('Falha ao carregar produtos: $error');
     } finally {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  void _filterProducts(String query) async {
+    try {
+      final products = await _products;
+      setState(() {
+        _searchQuery = query;
+        _filteredProducts = products['Company'].where((product) {
+          final productName = product['nome'].toString().toLowerCase();
+          final input = query.toLowerCase();
+          return productName.contains(input);
+        }).toList();
+      });
+    } catch (error) {
+      print('Erro ao filtrar produtos: $error');
     }
   }
 
@@ -119,6 +143,9 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
                                 hintStyle: TextStyle(color: Color(0xFF828A89)),
                                 border: InputBorder.none,
                               ),
+                              onChanged: (value) {
+                                _filterProducts(value);
+                              },
                             ),
                           ),
                           TextButton.icon(
@@ -149,9 +176,9 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
                         context: context,
                         builder: (BuildContext context) {
                           return AddProductModal(
-                              accessToken: widget.accessToken,
-                          categoryId: 1,);
-
+                            accessToken: widget.accessToken,
+                            categoryId: 1,
+                          );
                         },
                       );
 
@@ -160,8 +187,9 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => ComputadoresPage(
-                                accessToken: widget.accessToken,
-                            userEmail: widget.userEmail,),
+                              accessToken: widget.accessToken,
+                              userEmail: widget.userEmail,
+                            ),
                           ),
                         );
                       }
@@ -191,50 +219,38 @@ class _ComputadoresPageState extends State<ComputadoresPage> {
   }
 
   Widget _buildProductList() {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _products,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        } else if (snapshot.hasError) {
-          return Text('Erro: ${snapshot.error}');
-        } else {
-          final products = snapshot.data?['Company'] ?? [];
+    return _isLoading
+        ? CircularProgressIndicator()
+        : _filteredProducts.isEmpty
+            ? Center(
+                child: Text('Nenhum produto encontrado.'),
+              )
+            : Column(
+                children: _filteredProducts.map<Widget>((product) {
+                  final productName = product['nome'] ?? '';
+                  final productCode = (product['id_item'] != null)
+                      ? product['id_item'].toString()
+                      : '0';
+                  final productStock =
+                      (product['estoque'] != null) ? product['estoque'] : 0;
+                  final productId =
+                      (product['id_item'] != null) ? product['id_item'] : 0;
 
-          if (products.isEmpty) {
-            return Center(
-              child: Text('Nenhum produto encontrado.'),
-            );
-          }
-
-          return Column(
-            children: products.map<Widget>((product) {
-              final productName = product['nome'] ?? '';
-              final productCode = (product['id_item'] != null)
-                  ? product['id_item'].toString()
-                  : '0';
-              final productStock =
-                  (product['estoque'] != null) ? product['estoque'] : 0;
-              final productId =
-                  (product['id_item'] != null) ? product['id_item'] : 0;
-
-              return CrudContainer(
-                title: productName,
-                code: productCode,
-                stock: productStock,
-                accessToken: widget.accessToken,
-                productId: productId,
-                onDelete: () {
-                  setState(() {
-                    _products =
-                        ProductApiService.getProducts(widget.accessToken, 1);
-                  });
-                },
+                  return CrudContainer(
+                    title: productName,
+                    code: productCode,
+                    stock: productStock,
+                    accessToken: widget.accessToken,
+                    productId: productId,
+                    onDelete: () {
+                      setState(() {
+                        _filteredProducts.removeWhere((p) => p == product);
+                      });
+                      ProductApiService.deleteProduct(
+                          widget.accessToken, productId);
+                    },
+                  );
+                }).toList(),
               );
-            }).toList(),
-          );
-        }
-      },
-    );
   }
 }
