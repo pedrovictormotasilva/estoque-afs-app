@@ -58,7 +58,7 @@ class ProductApiService {
 
   static Future<void> createProduct(
       String accessToken, int categoryId, Map<String, dynamic> newProduct) async {
-    // Adicione a categoria ao mapa do novo produto
+   
     newProduct['categoryId'] = categoryId;
 
     final response = await http.post(
